@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+// For directory listings
+#include <dirent.h>
 
 #include "chttpd.h"
 #include "mimetypes.h"
@@ -23,11 +25,11 @@ void log(int type, char *s1, char *s2, int num)
 
 	switch (type) {
 	case ERROR: (void)sprintf(logbuffer,"Error: %s %s\n",s1, s2); break;
-	case SORRY: (void)sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s</body></html>\r\n", s1, s2); 
+	case SORRY: (void)sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s <hr />%s %s</body></html>\r\n", s1, s2, client, version); 
 				(void)write(num,logbuffer,strlen(logbuffer));
 				break;
 	case LOG: (void)sprintf(logbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Information</title></head><body><h2>CHTTPD info:</h2> %s:%s:5d</body></html>\r\n",s1, s2); break;
-	case SEND_ERROR: (void)sprintf(logbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s</body></html>\r\n", s1);
+	case SEND_ERROR: (void)sprintf(logbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s<hr />%s %s</body></html>\r\n", s1, client, version);
 				(void)write(num,logbuffer,strlen(logbuffer));
 				break;
 	}	
@@ -43,11 +45,11 @@ void log(int type, char *s1, char *s2, int num)
 	if(type == ERROR || type == SORRY || type == SEND_ERROR) exit(3);
 }
 
-void web(int fd, int hit)
+void web(int fd, int hit, char *datadir)
 {
 	int j, file_fd, buflen, len;
 	long i, filesize;
-	char * fstr;
+	char * fstr, path, wholepath;
 	static char buffer[BUFSIZE+1];
 
 	// Check to see if file is corrupted
@@ -78,7 +80,7 @@ void web(int fd, int hit)
 	for(j=0;j<i-1;j++) 	
 		if(buffer[j] == '.' && buffer[j+1] == '.')
 			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
-			
+	
 	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) {
 		if(file_exists("index.html")) {
 			(void)strcpy(buffer,"GET /index.html");
@@ -170,7 +172,7 @@ int main(int argc, char **argv)
 		else {
 			if(pid == 0) {
 				(void)close(listenfd);
-				web(socketfd,hit);
+				web(socketfd,hit,argv[2]);
 			} else {
 				(void)close(socketfd);
 			}

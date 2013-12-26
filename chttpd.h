@@ -5,10 +5,15 @@
 #define SEND_ERROR 45
 
 const char *client = "chttpd";
-const char *version = "1.1";
+const char *version = "1.2";
 
 
 // Check if a file exists (index.html)
+
+int strip_get(char *str) {
+	memmove(str, str+4, strlen(str));
+	return str;
+}
 
 int file_exists(char *fname) {
 	struct stat   buffer;   
