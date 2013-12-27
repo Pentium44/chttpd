@@ -49,8 +49,13 @@ void web(int fd, int hit, char *datadir)
 {
 	int j, file_fd, buflen, len;
 	long i, filesize;
-	char * fstr, path, wholepath;
+	char * fstr;
+	char * path; 
+	char * protocol;
+	char * stripslash_index;
+	char * stripslash_path;
 	static char buffer[BUFSIZE+1];
+	static char listbuffer[LIST_BUFSIZE*2];
 
 	// Check to see if file is corrupted
 	filesize =read(fd,buffer,BUFSIZE); 
@@ -81,14 +86,58 @@ void web(int fd, int hit, char *datadir)
 		if(buffer[j] == '.' && buffer[j+1] == '.')
 			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
 	
-	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) {
-		if(file_exists("index.html")) {
-			(void)strcpy(buffer,"GET /index.html");
-		} else {
-			log(SEND_ERROR,"Index file not found!","",fd);
+	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
+		(void)strcpy(buffer,"GET /index.html");
+	
+	
+	// set uri path
+	path = strchr(buffer,' '); 
+		path++; 
+	// get protocol
+	protocol = strchr(path,' ');
+		protocol++;
+		
+	// Check if directory was requested, if so, send index.html
+	if (is_dir(path) == 1) {
+		char getindex[PATH_MAX];
+		strcpy(getindex,path);
+		strcat(getindex,"index.html");
+		stripslash_index = getindex + 1;
+		stripslash_path = path + 1;
+		if(file_exists(stripslash_index) != 0) 
+		{
+			DIR *d = opendir(stripslash_path);
+			struct dirent* dirp;
+			(void)sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+			(void)write(fd,listbuffer,strlen(listbuffer));
+			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
+									"<html>\r\n"
+									"<head>\r\n"
+									"\t<title>Directory listing of %s</title>\r\n"
+									"</head>\r\n"
+									"<body>\r\n"
+									"\t<h2>Directory listing of %s</h2>\r\n"
+									"\t<hr />\r\n"
+									"\t<a href=\"..\">Parent Directory</a><br />\r\n", path, path);
+			(void)write(fd,listbuffer,strlen(listbuffer));
+			while ((dirp = readdir(d)))
+			{
+				if (dirp->d_name[0] == '.')
+					continue;
+				(void)sprintf(listbuffer,"\t<a href=\"%s\">%s</a><br />\r\n", dirp->d_name, dirp->d_name);
+				(void)write(fd,listbuffer,strlen(listbuffer));
+			}
+			(void)sprintf(listbuffer,"<hr>\r\n%s %s\r\n</body>\r\n</html>\r\n", client, version);
+			(void)write(fd,listbuffer,strlen(listbuffer));
+			exit(3);
+		} 
+		else 
+		{
+			strcat(path,"index.html");
 		}
 	}
 	
+	// Check file extensions and mime types before sending headers
 	buflen=strlen(buffer);
 	fstr = (char *)0;
 	for(i=0;extensions[i].ext != 0;i++) {
@@ -98,6 +147,7 @@ void web(int fd, int hit, char *datadir)
 			break;
 		}
 	}
+	
 	if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
