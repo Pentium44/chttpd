@@ -12,9 +12,13 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
-	v1.1:
-	Initial release, works fine
+	v1.2.2:
+	Added directory listings (Thanks Lisa!)
+	Added index.html support
 
 	v1.2:
 	Added some small features
 	Development at a standstill
+
+	v1.1:
+	Initial release, works fine
