@@ -24,17 +24,17 @@ void log(int type, char *s1, char *s2, int num)
 	char logbuffer[BUFSIZE*2];
 
 	switch (type) {
-	case ERROR: (void)sprintf(logbuffer,"Error: %s %s\n",s1, s2); break;
-	case SORRY: (void)sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s <hr />%s %s</body></html>\r\n", s1, s2, client, version); 
+	case ERROR: (void)sprintf(logbuffer,"%s %s (%s) : Error: %s %s",client, version, sys_lable,s1, s2); break;
+	case SORRY: (void)sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s <hr /><address>%s %s (%s)</address></body></html>\r\n", s1, s2, client, version, sys_lable); 
 				(void)write(num,logbuffer,strlen(logbuffer));
 				break;
-	case LOG: (void)sprintf(logbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Information</title></head><body><h2>CHTTPD info:</h2> %s:%s:5d</body></html>\r\n",s1, s2); break;
-	case SEND_ERROR: (void)sprintf(logbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s<hr />%s %s</body></html>\r\n", s1, client, version);
+	case LOG: (void)sprintf(logbuffer,"%s %s (%s) : Info: %s:%s:5d",client, version, sys_lable, s1, s2); break;
+	case SEND_ERROR: (void)sprintf(logbuffer,"HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s<hr /><address>%s %s (%s)</address></body></html>\r\n", s1, client, version, sys_lable);
 				(void)write(num,logbuffer,strlen(logbuffer));
 				break;
 	}	
 	
-	if(type == ERROR) {
+	if(type == ERROR || type == LOG) { // Log important data
 		if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
 			(void)write(fd,logbuffer,strlen(logbuffer)); 
 			(void)write(fd,"\n",1);      
@@ -54,6 +54,7 @@ void web(int fd, int hit, char *datadir)
 	char * protocol;
 	char * stripslash_index;
 	char * stripslash_path;
+	size_t pathlen; 
 	static char buffer[BUFSIZE+1];
 	static char listbuffer[LIST_BUFSIZE*2];
 
@@ -97,13 +98,21 @@ void web(int fd, int hit, char *datadir)
 	protocol = strchr(path,' ');
 		protocol++;
 		
+	pathlen = strlen(path);
+	if(is_dir(path) == 1) {
+		if(path[pathlen - 1] != forward_slash)
+			strcat(path,"/");
+	}
+		
 	// Check if directory was requested, if so, send index.html
 	if (is_dir(path) == 1) {
 		char getindex[PATH_MAX];
+		
 		strcpy(getindex,path);
 		strcat(getindex,"index.html");
 		stripslash_index = getindex + 1;
 		stripslash_path = path + 1;
+		
 		if(file_exists(stripslash_index) != 0) 
 		{
 			DIR *d = opendir(stripslash_path);
@@ -117,17 +126,35 @@ void web(int fd, int hit, char *datadir)
 									"</head>\r\n"
 									"<body>\r\n"
 									"\t<h2>Directory listing of %s</h2>\r\n"
-									"\t<hr />\r\n"
-									"\t<a href=\"..\">Parent Directory</a><br />\r\n", path, path);
+									"\t<hr />\r\n<table>\r\n", path, path);
 			(void)write(fd,listbuffer,strlen(listbuffer));
+			if (path[pathlen - 1] == forward_slash)
+			{
+				(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
+				(void)write(fd,listbuffer,strlen(listbuffer));
+			}
+			else
+			{
+				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s..\">Parent Directory</a></td></tr>\r\n", path);
+				(void)write(fd,listbuffer,strlen(listbuffer));
+			}
+			
+			// Start listing files and directories
 			while ((dirp = readdir(d)))
 			{
 				if (dirp->d_name[0] == '.')
 					continue;
-				(void)sprintf(listbuffer,"\t<a href=\"%s\">%s</a><br />\r\n", dirp->d_name, dirp->d_name);
+				if (path[pathlen - 1] == forward_slash)
+				{
+					(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
+				}
+				else
+				{
+					(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s%s\">%s</a></td></tr>\r\n", path, dirp->d_name, dirp->d_name);
+				}
 				(void)write(fd,listbuffer,strlen(listbuffer));
 			}
-			(void)sprintf(listbuffer,"<hr>\r\n%s %s\r\n</body>\r\n</html>\r\n", client, version);
+			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
 			(void)write(fd,listbuffer,strlen(listbuffer));
 			exit(3);
 		} 

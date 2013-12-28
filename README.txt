@@ -12,6 +12,11 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.2.3:
+	Fixed directory listings bug
+	Added sys lable to error, and directory pages
+	Cleaned up logging system
+
 	v1.2.2:
 	Added directory listings (Thanks Lisa!)
 	Added index.html support

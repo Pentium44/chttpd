@@ -6,8 +6,10 @@
 #define SEND_ERROR 45
 
 const char *client = "chttpd";
-const char *version = "1.2.2";
+const char *version = "1.2.3";
+const char *sys_lable = "Unix / Linux";
 
+int forward_slash = 47; // forward slash in ascii
 
 // Check if a file exists (index.html)
 int file_exists(char *fname) {
@@ -23,7 +25,7 @@ int is_dir(char* p)
 {
 	char * stripslash;
 	struct stat st;
-	stripslash = p + 1;
+	stripslash = p + 1; // strip the first forward 'slash' from the string
 	if (stat(stripslash, &st) == 0 && (st.st_mode & S_IFDIR)) {
 		return 1;
 	}
