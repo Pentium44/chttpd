@@ -1,7 +1,18 @@
-# Compile chttpd
+# Makefile - (C) Chris Dorman, 2013 <cddo@riseup.net>
+
 CC=gcc
-EXECUTABLE=chttpd
+FLAGS=-w
 
-chttpd: chttpd.c
-	$(CC) -o $(EXECUTABLE) chttpd.c
+all: chttpd
 
+chttpd: chttpd.o
+		$(CC) chttpd.o -o chttpd
+		
+chttpd.o: chttpd.c
+		$(CC) -c chttpd.c $(FLAGS)
+		
+clean:
+		rm *o chttpd
+		
+install: 
+		cp chttpd /usr/sbin
