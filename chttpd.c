@@ -99,7 +99,40 @@ void web(int fd, int hit, char *datadir)
 			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
 	
 	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
-		(void)strcpy(buffer,"GET /index.html");
+		if(file_exists("index.html") == 0) {
+			(void)strcpy(buffer,"GET /index.html");
+		} else {
+			DIR *d = opendir(".");
+			struct dirent* dirp; // struct dirp for directory listing
+			
+			(void)sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+			(void)write(fd,listbuffer,strlen(listbuffer)); // write header socket
+			
+			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
+									"<html>\r\n"
+									"<head>\r\n"
+									"\t<title>Directory listing of %s</title>\r\n"
+									"</head>\r\n"
+									"<body>\r\n"
+									"\t<h2>Directory listing of %s</h2>\r\n"
+									"\t<hr />\r\n<table>\r\n", path, path);
+			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
+			
+			(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
+			(void)write(fd,listbuffer,strlen(listbuffer));
+			
+			// Start listing files and directories
+			while ((dirp = readdir(d)))
+			{
+				if (dirp->d_name[0] == '.')
+					continue;
+				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
+				(void)write(fd,listbuffer,strlen(listbuffer));
+			}
+			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
+			(void)write(fd,listbuffer,strlen(listbuffer));
+			exit(0);
+		}
 	
 	
 	// set uri path
