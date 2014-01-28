@@ -1,5 +1,5 @@
 // CTHTTPD - Simple Web Server - GPLv2
-// Chris Dorman, 2012-2013 (cddo@riseup.net)
+// Chris Dorman, 2012-2014 (cddo@riseup.net)
  
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 // For directory listings
 #include <dirent.h>
 
@@ -100,8 +101,15 @@ void web(int fd, int hit, char *datadir)
 		
 	pathlen = strlen(path);
 	if(is_dir(path) == 1) {
-		if(path[pathlen - 1] != forward_slash)
+		if(path[pathlen - 1] != forward_slash) // if there is no "/" at the end of the url, add it
+		{
 			strcat(path,"/");
+			(void)sprintf(listbuffer,"HTTP/1.0 304 Not Modified\r\nLocation: %s\r\n\r\n", path); //header to buffer
+			(void)write(fd,listbuffer,strlen(listbuffer)); // write header to socket
+			//(void)sprintf(listbuffer,"<html><meta http-equiv=\"refresh\" content=\"0;url=%s\"></html>",path);
+			//(void)write(fd,listbuffer,strlen(listbuffer)); // write redirect
+			exit(3); // stop here, let the browser reconnect with a new url
+		}	
 	}
 		
 	// Check if directory was requested, if so, send index.html
@@ -110,15 +118,18 @@ void web(int fd, int hit, char *datadir)
 		
 		strcpy(getindex,path);
 		strcat(getindex,"index.html");
-		stripslash_index = getindex + 1;
-		stripslash_path = path + 1;
+		
+		stripslash_index = getindex + 1; // directory + index (for index redirection)
+		stripslash_path = path + 1; // get full path
 		
 		if(file_exists(stripslash_index) != 0) 
 		{
 			DIR *d = opendir(stripslash_path);
-			struct dirent* dirp;
+			struct dirent* dirp; // struct dirp for directory listing
+			
 			(void)sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer));
+			(void)write(fd,listbuffer,strlen(listbuffer)); // write header socket
+			
 			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
 									"<html>\r\n"
 									"<head>\r\n"
@@ -127,31 +138,17 @@ void web(int fd, int hit, char *datadir)
 									"<body>\r\n"
 									"\t<h2>Directory listing of %s</h2>\r\n"
 									"\t<hr />\r\n<table>\r\n", path, path);
+			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
+			
+			(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
 			(void)write(fd,listbuffer,strlen(listbuffer));
-			if (path[pathlen - 1] == forward_slash)
-			{
-				(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
-				(void)write(fd,listbuffer,strlen(listbuffer));
-			}
-			else
-			{
-				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s..\">Parent Directory</a></td></tr>\r\n", path);
-				(void)write(fd,listbuffer,strlen(listbuffer));
-			}
 			
 			// Start listing files and directories
 			while ((dirp = readdir(d)))
 			{
 				if (dirp->d_name[0] == '.')
 					continue;
-				if (path[pathlen - 1] == forward_slash)
-				{
-					(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
-				}
-				else
-				{
-					(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s%s\">%s</a></td></tr>\r\n", path, dirp->d_name, dirp->d_name);
-				}
+				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
 				(void)write(fd,listbuffer,strlen(listbuffer));
 			}
 			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
