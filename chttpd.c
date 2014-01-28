@@ -111,11 +111,11 @@ void web(int fd, int hit, char *datadir)
 			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
 									"<html>\r\n"
 									"<head>\r\n"
-									"\t<title>Directory listing of %s</title>\r\n"
+									"\t<title>Directory listing of /</title>\r\n"
 									"</head>\r\n"
 									"<body>\r\n"
-									"\t<h2>Directory listing of %s</h2>\r\n"
-									"\t<hr />\r\n<table>\r\n", path, path);
+									"\t<h2>Directory listing of /</h2>\r\n"
+									"\t<hr />\r\n<table>\r\n");
 			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
 			
 			(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
