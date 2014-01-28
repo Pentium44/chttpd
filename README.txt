@@ -1,7 +1,8 @@
 chttpd
 ======
 
-chttpd is a simple web server that I'm currently working on. This is the initial release of this web server, and its in working condition
+chttpd is a simple web server that I'm currently working on. This is the 
+initial release of this web server, and its in working condition
 
 My Website: http://cddo.us.to/ OR http://www.cddo.us/
 License: GPLv2
@@ -12,6 +13,10 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.2.4:
+	Fixed another bug in the directory listings, now working smooth
+	cleaned the code, added comments
+	
 	v1.2.3:
 	Fixed directory listings bug
 	Added sys lable to error, and directory pages
