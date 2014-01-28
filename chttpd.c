@@ -114,11 +114,11 @@ void web(int fd, int hit, char *datadir)
 		if(path[pathlen - 1] != forward_slash) // if there is no "/" at the end of the url, add it
 		{
 			strcat(path,"/");
-			(void)sprintf(listbuffer,"HTTP/1.0 304 Not Modified\r\nLocation: %s\r\n\r\n", path); //header to buffer
+			(void)sprintf(listbuffer,"HTTP/1.0 301 Moved Permanently\r\nLocation: %s\r\n\r\n", path); //header to buffer
 			(void)write(fd,listbuffer,strlen(listbuffer)); // write header to socket
 			//(void)sprintf(listbuffer,"<html><meta http-equiv=\"refresh\" content=\"0;url=%s\"></html>",path);
 			//(void)write(fd,listbuffer,strlen(listbuffer)); // write redirect
-			exit(3); // stop here, let the browser reconnect with a new url
+			exit(0); // stop here, let the browser reconnect with a new url
 		}	
 	}
 		
@@ -163,7 +163,7 @@ void web(int fd, int hit, char *datadir)
 			}
 			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
 			(void)write(fd,listbuffer,strlen(listbuffer));
-			exit(3);
+			exit(0);
 		} 
 		else 
 		{
