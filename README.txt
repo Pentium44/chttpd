@@ -13,6 +13,11 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.2.5:
+	Added Content-Length to header
+	Added new mimetypes
+	Fixed old archive mimetypes
+
 	v1.2.4:
 	Fixed another bug in the directory listings, now working smooth
 	cleaned the code, added comments

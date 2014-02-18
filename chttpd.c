@@ -57,7 +57,7 @@ void log(int type, char *s1, char *s2, int num)
 
 void web(int fd, int hit, char *datadir)
 {
-	int j, file_fd, buflen, len;
+	int j, file_fd, buflen, len, contentfs;
 	long i, filesize;
 	char * fstr;
 	char * exten;
@@ -221,12 +221,20 @@ void web(int fd, int hit, char *datadir)
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
+		
+	struct stat filesz;
+	stat(&buffer[5], &filesz);
+	contentfs = filesz.st_size;
 
 	log(LOG,"SEND",&buffer[5],hit);
 
-	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n\r\n", fstr);
+	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n", fstr);
 	(void)write(fd,buffer,strlen(buffer));
-
+	
+	// Add content length to http header
+	(void)sprintf(buffer,"Content-Length: %d\r\n\r\n", contentfs);
+	(void)write(fd,buffer,strlen(buffer));
+	
 	while (	(filesize = read(file_fd, buffer, BUFSIZE)) > 0 ) {
 		(void)write(fd,buffer,filesize);
 	}

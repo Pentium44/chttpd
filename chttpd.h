@@ -6,8 +6,8 @@
 #define SEND_ERROR 45
 
 const char *client = "chttpd";
-const char *version = "1.2.4";
-const char *sys_lable = "Unix / Linux";
+const char *version = "1.2.5";
+const char *sys_lable = "Linux";
 
 int forward_slash = 47; // forward slash in ascii
 
