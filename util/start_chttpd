@@ -5,8 +5,10 @@ PORT=80
 HTDOCS="/var/www"
 START_MSG="Starting CHTTPD"
 STOP_MSG="Stopping CHTTPD Processes"
+ERROR_MSG="Error, Usage: {start|stop}"
 
 case $1 in
 	start) echo $START_MSG; chttpd ${PORT} ${HTDOCS};;
 	stop) echo $STOP_MSG; killall chttpd;;
+	*) echo $ERROR_MSG;;
 esac
