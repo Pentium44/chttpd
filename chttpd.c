@@ -217,7 +217,8 @@ void web(int fd, int hit, char *datadir)
 		}
 	}
 	
-	if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
+	/* Just download the file if the extension is missing :D */
+	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
