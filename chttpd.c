@@ -118,8 +118,9 @@ void web(int fd, int hit, char *datadir)
 									"\t<hr />\r\n<table>\r\n");
 			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
 			
-			(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer));
+			// There is no parent directory at the root of the web servers filesystem xD
+			//(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
+			//(void)write(fd,listbuffer,strlen(listbuffer));
 			
 			// Start listing files and directories
 			while ((dirp = readdir(d)))
