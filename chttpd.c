@@ -127,6 +127,7 @@ void web(int fd, int hit, char *datadir)
 			{
 				if (dirp->d_name[0] == '.')
 					continue;
+					
 				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
 				(void)write(fd,listbuffer,strlen(listbuffer));
 			}
@@ -220,6 +221,7 @@ void web(int fd, int hit, char *datadir)
 	
 	/* Just download the file if the extension is missing :D */
 	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
+	if(fstr == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
