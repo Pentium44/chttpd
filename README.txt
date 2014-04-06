@@ -13,6 +13,9 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.2.6:
+	Added configuration parser
+	
 	v1.2.5:
 	Added Content-Length to header
 	Added new mimetypes

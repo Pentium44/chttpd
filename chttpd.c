@@ -1,24 +1,73 @@
 // CTHTTPD - Simple Web Server - GPLv2
 // Chris Dorman, 2012-2014 (cddo@riseup.net)
 // Help from Nickolai Vurgaft (slipperygate@gmail.com)
- 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <time.h>
-// For directory listings
-#include <dirent.h>
 
 #include "chttpd.h"
 #include "mimetypes.h"
+#include "check.h"
+#include "dep.h"
+
+//
+//
+// /// Simple configuration parser - Pacific
+//
+//
+
+#define CONFBUF 1024
+#define DELIM "="
+
+struct config
+{
+	char htdocs[CONFBUF];
+	char port[CONFBUF];
+	char status[CONFBUF];
+};
+     
+struct config get_config(char *filename)
+{
+	struct config configstruct;
+	FILE *file = fopen (filename, "r");
+    
+	if( access( filename, F_OK ) == -1 ) {
+		memcpy(configstruct.status,"1",1);
+	}
+	else
+	{
+		memcpy(configstruct.status,"0",1);
+	}
+    
+	if (file != NULL)
+	{
+		char line[CONFBUF];
+		int i = 0;
+     
+		while(fgets(line, sizeof(line), file) != NULL)
+		{
+			char *cfline;
+			cfline = strstr((char *)line,DELIM);
+			cfline = cfline + strlen(DELIM);
+       
+			if (i == 0){
+					// Remove newline from values to keep it clean of errors
+					if(cfline[strlen(cfline)-1] == '\n')
+						cfline[strlen(cfline)-1] = 0;
+					memcpy(configstruct.htdocs,cfline,strlen(cfline));
+			} else if (i == 1){
+					// Remove newline from values to keep it clean of errors
+					if(cfline[strlen(cfline)-1] == '\n')
+						cfline[strlen(cfline)-1] = 0;
+					memcpy(configstruct.port,cfline,strlen(cfline));
+			}
+                           
+			i++;
+		} // End while
+	} // End if file
+           
+	fclose(file);   
+           
+	return configstruct;
+     
+}
 
 void log(int type, char *s1, char *s2, int num)
 {
@@ -255,22 +304,35 @@ int main(int argc, char **argv)
 	socklen_t length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
+	
+	struct config configstruct; // config struct
 
-	if( argc < 3  || argc > 3 || !strcmp(argv[1], "-?") ) {
-		(void)printf("usage: server [port] [server directory] &"
-	"\tExample: server 80 ./ &\n\n"
-	"\tOnly Supports:");
-		for(i=0;extensions[i].ext != 0;i++)
-			(void)printf("%s, ",extensions[i].ext);
-		exit(0);
+	if(argc > 2 || argc < 2 || !strcmp(argv[1], "-?") || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+		(void)printf("usage: chttpd [chttpd config] &\n"
+	"Example: chttpd /path/to/config.conf &\n");
+		exit(0); // give exit code error
 	}
-	if(chdir(argv[2]) == -1){ 
-		(void)printf("ERROR: Can't Change to directory %s\n",argv[2]);
-		exit(4);
+	
+	if(argc == 2) {
+		configstruct = get_config(argv[1]);
+		if(configstruct.status == 1) {
+			(void)printf("ERROR: Can't find configuration file at %s.\n", argv[1]);
+			exit(1); // give exit code error
+		}
+	}
+	
+	//
+	// Parse the config file
+	//
+	
+	if(chdir(configstruct.htdocs) == -1) {
+		(void)printf("Warning: failed to chdir Errno: %d\n", errno);
+		(void)printf("Warning: Failed to set htdocs value: %s\n", configstruct.htdocs);
+		exit(1);
 	}
 	
 	if(fork() != 0)
-		return 0; 
+		return 1; 
 		
 	(void)signal(SIGCLD, SIG_IGN); 
 	(void)signal(SIGHUP, SIG_IGN); 
@@ -278,13 +340,14 @@ int main(int argc, char **argv)
 		(void)close(i);	
 	(void)setpgrp();	
 
-	log(LOG,"CHTTPD server starting",argv[1],getpid());
+	port = (int) strtol(configstruct.port, NULL, 0);
+
+	log(LOG,"CHTTPD server starting",configstruct.port,getpid());
 
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
 		log(ERROR, "system call","socket",0);
-	port = (int) strtol(argv[1], NULL, 0);
-	if(port < 0 || port >60000)
-		log(ERROR,"Invalid port number try [1,60000], tried starting on ",argv[1],0);
+	if(port < 0 || port > 60000)
+		log(ERROR,"Invalid port number try [1,60000], tried starting on ",configstruct.port,0);
 	
 	bzero(&serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
