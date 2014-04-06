@@ -10,8 +10,4 @@
 #define LOG   44
 #define SEND_ERROR 45
 
-const char *client = "chttpd";
-const char *version = "1.2.6";
-const char *sys_lable = "Linux";
-
-int forward_slash = 47; // forward slash in ascii
+void log(int type, char *s1, char *s2, int num);

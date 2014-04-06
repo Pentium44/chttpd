@@ -13,6 +13,10 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.3.0:
+	Added CGI support.
+	CGI can be enabled / disabled within config
+	
 	v1.2.6:
 	Added configuration parser
 	

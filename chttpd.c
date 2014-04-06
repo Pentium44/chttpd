@@ -7,6 +7,13 @@
 #include "check.h"
 #include "dep.h"
 
+
+const char *client = "chttpd";
+const char *version = "1.3.0";
+const char *sys_lable = "Linux";
+
+int forward_slash = 47; // forward slash in ascii
+
 //
 //
 // /// Simple configuration parser - Pacific
@@ -21,6 +28,7 @@ struct config
 	char htdocs[CONFBUF];
 	char port[CONFBUF];
 	char status[CONFBUF];
+	char cgi[CONFBUF];
 };
      
 struct config get_config(char *filename)
@@ -57,6 +65,11 @@ struct config get_config(char *filename)
 					if(cfline[strlen(cfline)-1] == '\n')
 						cfline[strlen(cfline)-1] = 0;
 					memcpy(configstruct.port,cfline,strlen(cfline));
+			} else if (i == 2){
+					// Remove newline from values to keep it clean of errors
+					if(cfline[strlen(cfline)-1] == '\n')
+						cfline[strlen(cfline)-1] = 0;
+					memcpy(configstruct.cgi,cfline,strlen(cfline));
 			}
                            
 			i++;
@@ -104,7 +117,7 @@ void log(int type, char *s1, char *s2, int num)
 	if(type == ERROR || type == SORRY || type == SEND_ERROR) exit(3);
 }
 
-void web(int fd, int hit, char *datadir)
+void web(int fd, int hit, char *datadir, char *cgistatus)
 {
 	int j, file_fd, buflen, len, contentfs;
 	long i, filesize;
@@ -274,6 +287,20 @@ void web(int fd, int hit, char *datadir)
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
+
+	if(!strcmp(cgistatus, "yes")) {
+		if(fstr == 2) {
+			(void)do_cgi(file_fd,fd,datadir);
+			exit(0);
+		}
+	}
+	else
+	{
+		if(fstr == 2) {
+			log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
+		}
+	}
+
 		
 	struct stat filesz;
 	stat(&buffer[5], &filesz);
@@ -370,7 +397,7 @@ int main(int argc, char **argv)
 		else {
 			if(pid == 0) {
 				(void)close(listenfd);
-				web(socketfd,hit,argv[2]);
+				web(socketfd,hit,configstruct.htdocs,configstruct.cgi);
 			} else {
 				(void)close(socketfd);
 			}

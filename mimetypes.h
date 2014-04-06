@@ -11,9 +11,8 @@ struct {
 	{"tar", "application/tar"	},  
 	{"htm", "text/html"	},  
 	{"html", "text/html"	},  
-	{"php", "text/php"	},  
-	{"cgi", "text/cgi" 	},  
-	{"asp", "text/asp"  	},  
+	{"php", "text/php"	},   
+	{"asp", "text/asp"  },  
 	{"jsp", "image/jsp"	},  
 	{"xml", "text/xml" 	},  
 	{"js", "text/js"   	},
@@ -48,5 +47,6 @@ struct {
     {"svg", "image/svg" },
     {"ico", "image/x-icon" },
     {"log", 1},   
+    {"cgi", 2},
 	{0,0} 
 };
