@@ -16,3 +16,4 @@ clean:
 		
 install: 
 		cp chttpd /usr/sbin
+		cp chttpd.conf /etc
