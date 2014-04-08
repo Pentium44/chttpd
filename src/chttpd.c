@@ -21,21 +21,29 @@ int forward_slash = 47; // forward slash in ascii
 //
 
 #define CONFBUF 1024
-#define DELIM "="
+char *equal = "=";
 
 struct config
 {
+	// struct for htdocs string
 	char htdocs[CONFBUF];
+	// struct for port string
 	char port[CONFBUF];
+	// struct for config status (failed to open config etc)
 	char status[CONFBUF];
+	// struct for cgi 
 	char cgi[CONFBUF];
 };
-     
+    
+// write to struct
 struct config get_config(char *filename)
 {
 	struct config configstruct;
+
+	// open config as readable
 	FILE *file = fopen (filename, "r");
     
+    // check if config opens successfully
 	if( access( filename, F_OK ) == -1 ) {
 		memcpy(configstruct.status,"1",1);
 	}
@@ -44,35 +52,54 @@ struct config get_config(char *filename)
 		memcpy(configstruct.status,"0",1);
 	}
     
+    // if file is null, end
 	if (file != NULL)
 	{
+		// line buffer for config
 		char line[CONFBUF];
+		// int used to track config line
 		int i = 0;
      
+		// config while loop, loops fgets until end of file
 		while(fgets(line, sizeof(line), file) != NULL)
 		{
-			char *cfline;
-			cfline = strstr((char *)line,DELIM);
-			cfline = cfline + strlen(DELIM);
-       
-			if (i == 0){
-					// Remove newline from values to keep it clean of errors
+			
+			char *cfline; // setup string
+			cfline = strtok(line, equal);
+		
+			
+			// if line is commented out, skip
+			if (strncmp("#",line,1)==0)
+				continue;
+				
+			if (strncmp("HTDOCS",cfline,6)==0 || strncmp("htdocs",cfline,6)==0) {
+				
+					cfline = strtok(NULL, equal); // call strtok to get value
+					// if newline is found, remove newline from string
 					if(cfline[strlen(cfline)-1] == '\n')
 						cfline[strlen(cfline)-1] = 0;
+					// write htdocs path to struct
 					memcpy(configstruct.htdocs,cfline,strlen(cfline));
-			} else if (i == 1){
-					// Remove newline from values to keep it clean of errors
+					
+			} else if (strncmp("PORT",cfline,4)==0 || strncmp("port",cfline,4)==0){
+				
+					cfline = strtok(NULL, equal); // call strtok to get value
+					// if newline is found, remove newline from string
 					if(cfline[strlen(cfline)-1] == '\n')
 						cfline[strlen(cfline)-1] = 0;
+					// write port to struct
 					memcpy(configstruct.port,cfline,strlen(cfline));
-			} else if (i == 2){
-					// Remove newline from values to keep it clean of errors
+					
+			} else if (strncmp("ENABLE_CGI",cfline,10)==0 || strncmp("enable_cgi",cfline,10)==0){
+					
+					cfline = strtok(NULL, equal); // call strtok to get value
+					// if newline is found, remove newline from string
 					if(cfline[strlen(cfline)-1] == '\n')
 						cfline[strlen(cfline)-1] = 0;
+					// write cgi status to struct
 					memcpy(configstruct.cgi,cfline,strlen(cfline));
 			}
                            
-			i++;
 		} // End while
 	} // End if file
            
@@ -282,21 +309,22 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	}
 	
 	/* Just download the file if the extension is missing :D */
-	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
-	if(fstr == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
+	//if(atoi(fstr) == 0) strcpy(fstr,"application/octet-stream");
+	
+	if(strncmp("server/log",fstr,10)==0) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
 
 	if(!strcmp(cgistatus, "yes")) {
-		if(fstr == 2) {
+		if(strncmp("server/cgi",fstr,10)==0) {
 			(void)do_cgi(file_fd,fd,datadir);
 			exit(0);
 		}
 	}
 	else
 	{
-		if(fstr == 2) {
+		if(strncmp("server/cgi",fstr,10)==0) {
 			log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
 		}
 	}
@@ -334,7 +362,7 @@ int main(int argc, char **argv)
 	
 	struct config configstruct; // config struct
 
-	if(argc > 2 || argc < 2 || !strcmp(argv[1], "-?") || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+	if(argc > 2 || argc < 2) {
 		(void)printf("usage: chttpd [chttpd config] &\n"
 	"Example: chttpd /path/to/config.conf &\n");
 		exit(0); // give exit code error
@@ -342,7 +370,7 @@ int main(int argc, char **argv)
 	
 	if(argc == 2) {
 		configstruct = get_config(argv[1]);
-		if(configstruct.status == 1) {
+		if(atoi(configstruct.status) == 1) {
 			(void)printf("ERROR: Can't find configuration file at %s.\n", argv[1]);
 			exit(1); // give exit code error
 		}
@@ -351,6 +379,10 @@ int main(int argc, char **argv)
 	//
 	// Parse the config file
 	//
+	
+	(void)printf("chttpd: set port: %s\n", configstruct.port);
+	(void)printf("chttpd: set htdocs directory: %s\n", configstruct.htdocs);
+	(void)printf("chttpd: CGI enabled: %s\n", configstruct.cgi);
 	
 	if(chdir(configstruct.htdocs) == -1) {
 		(void)printf("Warning: failed to chdir Errno: %d\n", errno);
