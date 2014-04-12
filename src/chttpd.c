@@ -25,16 +25,12 @@ char *equal = "=";
 
 struct config
 {
-	// struct for htdocs string
 	char htdocs[CONFBUF];
-	// struct for port string
 	char port[CONFBUF];
-	// struct for config status (failed to open config etc)
 	char status[CONFBUF];
-	// struct for cgi 
 	char cgi[CONFBUF];
 };
-    
+     
 // write to struct
 struct config get_config(char *filename)
 {
@@ -309,22 +305,21 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	}
 	
 	/* Just download the file if the extension is missing :D */
-	//if(atoi(fstr) == 0) strcpy(fstr,"application/octet-stream");
-	
-	if(strncmp("server/log",fstr,10)==0) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
+	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
+	if(atoi(fstr) == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
 
 	if(!strcmp(cgistatus, "yes")) {
-		if(strncmp("server/cgi",fstr,10)==0) {
+		if(atoi(fstr) == 2) {
 			(void)do_cgi(file_fd,fd,datadir);
 			exit(0);
 		}
 	}
 	else
 	{
-		if(strncmp("server/cgi",fstr,10)==0) {
+		if(atoi(fstr) == 2) {
 			log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
 		}
 	}
@@ -362,7 +357,7 @@ int main(int argc, char **argv)
 	
 	struct config configstruct; // config struct
 
-	if(argc > 2 || argc < 2) {
+	if(argc > 2 || argc < 2 || !strcmp(argv[1], "-?") || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
 		(void)printf("usage: chttpd [chttpd config] &\n"
 	"Example: chttpd /path/to/config.conf &\n");
 		exit(0); // give exit code error
@@ -379,10 +374,6 @@ int main(int argc, char **argv)
 	//
 	// Parse the config file
 	//
-	
-	(void)printf("chttpd: set port: %s\n", configstruct.port);
-	(void)printf("chttpd: set htdocs directory: %s\n", configstruct.htdocs);
-	(void)printf("chttpd: CGI enabled: %s\n", configstruct.cgi);
 	
 	if(chdir(configstruct.htdocs) == -1) {
 		(void)printf("Warning: failed to chdir Errno: %d\n", errno);
