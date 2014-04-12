@@ -1,4 +1,4 @@
 # chttpd config file - 
 HTDOCS=/root/chttpd
-PORT=81
+PORT=80
 ENABLE_CGI=no

@@ -306,20 +306,20 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	
 	/* Just download the file if the extension is missing :D */
 	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
-	if(atoi(fstr) == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
+	if(fstr == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
 		log(SORRY, "failed to open file",&buffer[5],fd);
 
 	if(!strcmp(cgistatus, "yes")) {
-		if(atoi(fstr) == 2) {
+		if(fstr == 2) {
 			(void)do_cgi(file_fd,fd,datadir);
 			exit(0);
 		}
 	}
 	else
 	{
-		if(atoi(fstr) == 2) {
+		if(fstr == 2) {
 			log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
 		}
 	}
