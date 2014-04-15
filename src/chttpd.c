@@ -105,7 +105,7 @@ struct config get_config(char *filename)
      
 }
 
-void log(int type, char *s1, char *s2, int num)
+void do_chttpd_log(int type, char *s1, char *s2, int num)
 {
 	// logs the local time of the event 
 	time_t now = time(NULL);
@@ -157,7 +157,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	// Check to see if file is corrupted
 	filesize =read(fd,buffer,BUFSIZE); 
 	if(filesize == 0 || filesize == -1) {
-		log(SORRY,"failed to read browser request","",fd);
+		do_chttpd_log(SORRY,"failed to read browser request","",fd);
 	}
 	
 	if(filesize > 0 && filesize < BUFSIZE)	
@@ -167,10 +167,10 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	for(i=0;i<filesize;i++)	
 		if(buffer[i] == '\r' || buffer[i] == '\n')
 			buffer[i]='*';
-	log(LOG,"request",buffer,hit);
+	do_chttpd_log(LOG,"request",buffer,hit);
 
 	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
-		log(SORRY,"Only simple GET operation supported",buffer,fd);
+		do_chttpd_log(SORRY,"Only simple GET operation supported",buffer,fd);
 
 	for(i=4;i<BUFSIZE;i++) { 
 		if(buffer[i] == ' ') { 
@@ -181,7 +181,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 
 	for(j=0;j<i-1;j++) 	
 		if(buffer[j] == '.' && buffer[j+1] == '.')
-			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
+			do_chttpd_log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
 	
 	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
 		if(file_exists("index.html") == 0) {
@@ -305,22 +305,22 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	}
 	
 	/* Just download the file if the extension is missing :D */
-	//if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
-	if(fstr == 1) log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
+	//if(fstr == 0) do_chttpd_log(SORRY,"file extension type not supported",buffer,fd);
+	if(strncmp("serverlog",fstr,9)==0) do_chttpd_log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
-		log(SORRY, "failed to open file",&buffer[5],fd);
+		do_chttpd_log(SORRY, "failed to open file",&buffer[5],fd);
 
-	if(!strcmp(cgistatus, "yes")) {
-		if(fstr == 2) {
+	if(strncmp("yes",cgistatus,3)==0) {
+		if(strncmp("servercgi",fstr,9)==0) {
 			(void)do_cgi(file_fd,fd,datadir);
 			exit(0);
 		}
 	}
 	else
 	{
-		if(fstr == 2) {
-			log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
+		if(strncmp("servercgi",fstr,9)==0) {
+			do_chttpd_log(SORRY, "CGI disabled - ", "Cannot access CGI script", fd);
 		}
 	}
 
@@ -329,7 +329,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	stat(&buffer[5], &filesz);
 	contentfs = filesz.st_size;
 
-	log(LOG,"SEND",&buffer[5],hit);
+	do_chttpd_log(LOG,"SEND",&buffer[5],hit);
 
 	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n", fstr);
 	(void)write(fd,buffer,strlen(buffer));
@@ -392,12 +392,12 @@ int main(int argc, char **argv)
 
 	port = (int) strtol(configstruct.port, NULL, 0);
 
-	log(LOG,"CHTTPD server starting",configstruct.port,getpid());
+	do_chttpd_log(LOG,"CHTTPD server starting",configstruct.port,getpid());
 
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
-		log(ERROR, "system call","socket",0);
+		do_chttpd_log(ERROR, "system call","socket",0);
 	if(port < 0 || port > 60000)
-		log(ERROR,"Invalid port number try [1,60000], tried starting on ",configstruct.port,0);
+		do_chttpd_log(ERROR,"Invalid port number try [1,60000], tried starting on ",configstruct.port,0);
 	
 	bzero(&serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
@@ -405,17 +405,17 @@ int main(int argc, char **argv)
 	serv_addr.sin_port = htons(port);
 	
 	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0)
-		log(ERROR,"Failed to ","bind",0);
+		do_chttpd_log(ERROR,"Failed to ","bind",0);
 	if( listen(listenfd,64) <0)
-		log(ERROR,"Failed to","listen",0);
+		do_chttpd_log(ERROR,"Failed to","listen",0);
 
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, (socklen_t*) &length)) < 0)
-			log(ERROR,"Failed to","accept",0);
+			do_chttpd_log(ERROR,"Failed to","accept",0);
 
 		if((pid = fork()) < 0) {
-			log(ERROR,"Failed to","fork",0);
+			do_chttpd_log(ERROR,"Failed to","fork",0);
 		}
 		else {
 			if(pid == 0) {

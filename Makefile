@@ -1,7 +1,7 @@
 # Makefile - (C) Chris Dorman, 2013 <cddo@riseup.net>
 
 CC=gcc
-FLAGS=-w
+FLAGS=
 
 all: chttpd
 

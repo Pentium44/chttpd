@@ -46,7 +46,7 @@ struct {
     {"patch", "text/plain" },
     {"svg", "image/svg" },
     {"ico", "image/x-icon" },
-    {"log", 1},   
-    {"cgi", 2},
+    {"log", "serverlog"},   
+    {"cgi", "servercgi"},
 	{0,0} 
 };

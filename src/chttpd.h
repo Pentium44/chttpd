@@ -10,4 +10,4 @@
 #define LOG   44
 #define SEND_ERROR 45
 
-void log(int type, char *s1, char *s2, int num);
+void do_chttpd_log(int type, char *s1, char *s2, int num);
