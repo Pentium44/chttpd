@@ -48,5 +48,5 @@ struct {
     {"ico", "image/x-icon" },
     {"log", "serverlog"},   
     {"cgi", "servercgi"},
-	{0,0} 
+	{0, 0} 
 };

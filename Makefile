@@ -6,11 +6,12 @@ FLAGS=
 all: chttpd
 
 chttpd: chttpd.o
-		$(CC) chttpd.o check.o cgi.o -o chttpd
+		$(CC) chttpd.o check.o cgi.o log.o -o chttpd
 chttpd.o: 
 		$(CC) -c src/chttpd.c $(FLAGS)
 		$(CC) -c src/check.c $(FLAGS)
 		$(CC) -c src/cgi.c $(FLAGS)
+		$(CC) -c src/log.c $(FLAGS)
 clean:
 		rm *o chttpd
 		
