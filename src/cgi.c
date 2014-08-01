@@ -13,8 +13,8 @@ void do_cgi(char *file, int fd, char *cgiroot)
 	static char buffer[BUFSIZE+1];
 	
 	// Write HTTP protocol to socket before executing cgi
-	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\n");
-	(void)write(fd,buffer,strlen(buffer));
+	sprintf(buffer,"HTTP/1.0 200 OK\r\n");
+	write(fd,buffer,strlen(buffer));
 	// /
 	// start parsing the cgi code
 	// /

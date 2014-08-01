@@ -154,15 +154,15 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
 		if(file_exists("index.html") == 0) {
-			(void)strcpy(buffer,"GET /index.html");
+			strcpy(buffer,"GET /index.html");
 		} else {
 			DIR *d = opendir(".");
 			struct dirent* dirp; // struct dirp for directory listing
 			
-			(void)sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer)); // write header socket
+			sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+			write(fd,listbuffer,strlen(listbuffer)); // write header socket
 			
-			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
+			sprintf(listbuffer,"<!DOCTYPE html>\r\n"
 									"<html>\r\n"
 									"<head>\r\n"
 									"\t<title>Directory listing of /</title>\r\n"
@@ -170,11 +170,11 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 									"<body>\r\n"
 									"\t<h2>Directory listing of /</h2>\r\n"
 									"\t<hr />\r\n<table>\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
+			write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
 			
 			// There is no parent directory at the root of the web servers filesystem xD
-			//(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
-			//(void)write(fd,listbuffer,strlen(listbuffer));
+			//sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
+			//write(fd,listbuffer,strlen(listbuffer));
 			
 			// Start listing files and directories
 			while ((dirp = readdir(d)))
@@ -182,11 +182,11 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 				if (dirp->d_name[0] == '.')
 					continue;
 					
-				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
-				(void)write(fd,listbuffer,strlen(listbuffer));
+				sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
+				write(fd,listbuffer,strlen(listbuffer));
 			}
-			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
-			(void)write(fd,listbuffer,strlen(listbuffer));
+			sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
+			write(fd,listbuffer,strlen(listbuffer));
 			exit(0);
 		}
 	
@@ -203,10 +203,10 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 		if(path[pathlen - 1] != forward_slash) // if there is no "/" at the end of the url, add it
 		{
 			strcat(path,"/");
-			(void)sprintf(listbuffer,"HTTP/1.0 301 Moved Permanently\r\nLocation: %s\r\n\r\n", path); //header to buffer
-			(void)write(fd,listbuffer,strlen(listbuffer)); // write header to socket
-			//(void)sprintf(listbuffer,"<html><meta http-equiv=\"refresh\" content=\"0;url=%s\"></html>",path);
-			//(void)write(fd,listbuffer,strlen(listbuffer)); // write redirect
+			sprintf(listbuffer,"HTTP/1.0 301 Moved Permanently\r\nLocation: %s\r\n\r\n", path); //header to buffer
+			write(fd,listbuffer,strlen(listbuffer)); // write header to socket
+			//sprintf(listbuffer,"<html><meta http-equiv=\"refresh\" content=\"0;url=%s\"></html>",path);
+			//write(fd,listbuffer,strlen(listbuffer)); // write redirect
 			exit(0); // stop here, let the browser reconnect with a new url
 		}	
 	}
@@ -226,10 +226,10 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 			DIR *d = opendir(stripslash_path);
 			struct dirent* dirp; // struct dirp for directory listing
 			
-			(void)sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer)); // write header socket
+			sprintf(listbuffer,"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n");
+			write(fd,listbuffer,strlen(listbuffer)); // write header socket
 			
-			(void)sprintf(listbuffer,"<!DOCTYPE html>\r\n"
+			sprintf(listbuffer,"<!DOCTYPE html>\r\n"
 									"<html>\r\n"
 									"<head>\r\n"
 									"\t<title>Directory listing of %s</title>\r\n"
@@ -237,21 +237,21 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 									"<body>\r\n"
 									"\t<h2>Directory listing of %s</h2>\r\n"
 									"\t<hr />\r\n<table>\r\n", path, path);
-			(void)write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
+			write(fd,listbuffer,strlen(listbuffer)); // write list html to socket
 			
-			(void)sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
-			(void)write(fd,listbuffer,strlen(listbuffer));
+			sprintf(listbuffer,"\t<tr><td><a href=\"..\">Parent Directory</a></td></tr>\r\n");
+			write(fd,listbuffer,strlen(listbuffer));
 			
 			// Start listing files and directories
 			while ((dirp = readdir(d)))
 			{
 				if (dirp->d_name[0] == '.')
 					continue;
-				(void)sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
-				(void)write(fd,listbuffer,strlen(listbuffer));
+				sprintf(listbuffer,"\t<tr><td><a href=\"%s\">%s</a></td></tr>\r\n", dirp->d_name, dirp->d_name);
+				write(fd,listbuffer,strlen(listbuffer));
 			}
-			(void)sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
-			(void)write(fd,listbuffer,strlen(listbuffer));
+			sprintf(listbuffer,"\t</table>\r\n<hr /><address>%s %s (%s)</address>\r\n</body>\r\n</html>\r\n", client, version, sys_lable);
+			write(fd,listbuffer,strlen(listbuffer));
 			exit(0);
 		} 
 		else 
@@ -284,7 +284,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 
 	if(strncmp("yes",cgistatus,3)==0) {
 		if(strncmp("servercgi",fstr,9)==0) {
-			(void)do_cgi(file_fd,fd,datadir);
+			do_cgi(file_fd,fd,datadir);
 			exit(0);
 		}
 	}
@@ -301,12 +301,12 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 
 	do_chttpd_log(LOG,"SEND",&buffer[5],hit);
 
-	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n", fstr);
-	(void)write(fd,buffer,strlen(buffer));
+	sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n", fstr);
+	write(fd,buffer,strlen(buffer));
 	
 	// Add content length to http header
-	(void)sprintf(buffer,"Content-Length: %d\r\n\r\n", contentfs);
-	(void)write(fd,buffer,strlen(buffer));
+	sprintf(buffer,"Content-Length: %d\r\n\r\n", contentfs);
+	write(fd,buffer,strlen(buffer));
 	
 	int time_ms, bufchunk, limit, dothrottle;
 	
@@ -328,13 +328,13 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	if(dothrottle == 1) {
 		while((filesize = read(file_fd, buffer, BUFSIZE)) > 0) {
 			ms_sleep(time_ms);
-			(void)write(fd,buffer,filesize);
+			write(fd,buffer,filesize);
 		}		
 	}
 	else 
 	{
 		while((filesize = read(file_fd, buffer, BUFSIZE)) > 0) {
-			(void)write(fd,buffer,filesize);
+			write(fd,buffer,filesize);
 		}
 	}
 	
@@ -356,7 +356,7 @@ int main(int argc, char **argv)
 	struct config configstruct; // config struct
 
 	if(argc > 2 || argc < 2 || !strcmp(argv[1], "-?") || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
-		(void)printf("usage: chttpd [chttpd config] &\n"
+		printf("usage: chttpd [chttpd config] &\n"
 	"Example: chttpd /path/to/config.conf &\n");
 		exit(0); // give exit code error
 	}
@@ -364,7 +364,7 @@ int main(int argc, char **argv)
 	if(argc == 2) {
 		configstruct = get_config(argv[1]);
 		if(atoi(configstruct.status) == 1) {
-			(void)printf("ERROR: Can't find configuration file at %s.\n", argv[1]);
+			printf("ERROR: Can't find configuration file at %s.\n", argv[1]);
 			exit(1); // give exit code error
 		}
 	}
@@ -374,19 +374,19 @@ int main(int argc, char **argv)
 	//
 	
 	if(chdir(configstruct.htdocs) == -1) {
-		(void)printf("Warning: failed to chdir Errno: %d\n", errno);
-		(void)printf("Warning: Failed to set htdocs value: %s\n", configstruct.htdocs);
+		printf("Warning: failed to chdir Errno: %d\n", errno);
+		printf("Warning: Failed to set htdocs value: %s\n", configstruct.htdocs);
 		exit(1);
 	}
 	
 	if(fork() != 0)
 		return 1; 
 		
-	(void)signal(SIGCLD, SIG_IGN); 
-	(void)signal(SIGHUP, SIG_IGN); 
+	signal(SIGCLD, SIG_IGN); 
+	signal(SIGHUP, SIG_IGN); 
 	for(i=0;i<32;i++)
-		(void)close(i);	
-	(void)setpgrp();	
+		close(i);	
+	setpgrp();	
 
 	port = (int) strtol(configstruct.port, NULL, 0);
 
@@ -417,10 +417,10 @@ int main(int argc, char **argv)
 		}
 		else {
 			if(pid == 0) {
-				(void)close(listenfd);
+				close(listenfd);
 				web(socketfd,hit,configstruct.htdocs,configstruct.cgi,configstruct.maxspeed);
 			} else {
-				(void)close(socketfd);
+				close(socketfd);
 			}
 		}
 	}

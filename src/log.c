@@ -20,21 +20,21 @@ void do_chttpd_log(int type, char *s1, char *s2, int num)
 	char logbuffer[BUFSIZE*2];
 
 	switch (type) {
-	case ERROR: (void)sprintf(logbuffer,"chttpd - %s : Error: %s %s", timebuf, s1, s2); break;
-	case SORRY: (void)sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s <hr /><address>chttpd</address></body></html>\r\n", s1, s2); 
-				(void)write(num,logbuffer,strlen(logbuffer));
+	case ERROR: sprintf(logbuffer,"chttpd - %s : Error: %s %s", timebuf, s1, s2); break;
+	case SORRY: sprintf(logbuffer, "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Error</title>\n</head><body><h2>CHTTPD Error:</h2> %s %s <hr /><address>chttpd</address></body></html>\r\n", s1, s2); 
+				write(num,logbuffer,strlen(logbuffer));
 				break;
-	case LOG: (void)sprintf(logbuffer,"chttpd - %s : Info: %s:%s:5d", timebuf, s1, s2); break;
-	case SEND_ERROR: (void)sprintf(logbuffer,"HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s<hr /><address>chttpd</address></body></html>\r\n", s1);
-				(void)write(num,logbuffer,strlen(logbuffer));
+	case LOG: sprintf(logbuffer,"chttpd - %s : Info: %s:%s:5d", timebuf, s1, s2); break;
+	case SEND_ERROR: sprintf(logbuffer,"HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/html\r\n\r\n<html><head><title>CHTTPD: Found error</title></head><body><h2>Index error</h2>%s<hr /><address>chttpd</address></body></html>\r\n", s1);
+				write(num,logbuffer,strlen(logbuffer));
 				break;
 	}	
 	
 	if(type == ERROR || type == LOG) { // Log important data
 		if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
-			(void)write(fd,logbuffer,strlen(logbuffer)); 
-			(void)write(fd,"\n",1);      
-			(void)close(fd);
+			write(fd,logbuffer,strlen(logbuffer)); 
+			write(fd,"\n",1);      
+			close(fd);
 		}
 	}
 	
