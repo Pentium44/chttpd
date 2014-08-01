@@ -4,3 +4,4 @@
 
 int file_exists(char *fname);
 int is_dir(char* p);
+void ms_sleep(unsigned int ms);

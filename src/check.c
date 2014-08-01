@@ -26,3 +26,22 @@ int is_dir(char* p) {
 	}
 	return 0;
 }
+
+void ms_sleep(unsigned int ms)
+{
+
+	struct timespec elapsed;
+	struct timespec tv;
+	int was_error;
+	
+	/* Set the timeout interval */
+	elapsed.tv_sec = ms/1000;
+	elapsed.tv_nsec = (ms%1000)*1000000;
+	
+	do {
+		errno = 0;
+		tv.tv_sec = elapsed.tv_sec;
+		tv.tv_nsec = elapsed.tv_nsec;
+		was_error = nanosleep(&tv, &elapsed);
+	} while (was_error && (errno == EINTR));
+}

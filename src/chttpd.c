@@ -24,6 +24,7 @@ struct config
 	char port[CONFBUF];
 	char status[CONFBUF];
 	char cgi[CONFBUF];
+	char maxspeed[CONFBUF];
 };
      
 // write to struct
@@ -89,6 +90,14 @@ struct config get_config(char *filename)
 						cfline[strlen(cfline)-1] = 0;
 					// write cgi status to struct
 					memcpy(configstruct.cgi,cfline,strlen(cfline));
+			} else if (strncmp("MAX_SEND_SPEED",cfline,14)==0 || strncmp("max_send_speed",cfline,10)==0){
+					
+					cfline = strtok(NULL, equal); // call strtok to get value
+					// if newline is found, remove newline from string
+					if(cfline[strlen(cfline)-1] == '\n')
+						cfline[strlen(cfline)-1] = 0;
+					// write cgi status to struct
+					memcpy(configstruct.maxspeed,cfline,strlen(cfline));
 			}
                            
 		} // End while
@@ -100,7 +109,7 @@ struct config get_config(char *filename)
      
 }
 
-void web(int fd, int hit, char *datadir, char *cgistatus)
+void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 {
 	int j, file_fd, buflen, len, contentfs;
 	long i, filesize;
@@ -299,13 +308,40 @@ void web(int fd, int hit, char *datadir, char *cgistatus)
 	(void)sprintf(buffer,"Content-Length: %d\r\n\r\n", contentfs);
 	(void)write(fd,buffer,strlen(buffer));
 	
-	while (	(filesize = read(file_fd, buffer, BUFSIZE)) > 0 ) {
-		(void)write(fd,buffer,filesize);
+	int dothrottle;
+	
+	int time_ms, bufchunk, limit;
+	if(strncmp("0",cgistatus,1)!=0) {
+		limit = atoi(throttle_speed);
+		bufchunk = 4096;
+		time_ms = 1000/(limit/bufchunk);
+		if(time_ms<1) {
+			dothrottle = 0;
+		} else {
+			dothrottle = 1;
+		}
+	} else {
+		dothrottle = 0;
 	}
+	
+	if(dothrottle == 1) {
+		while((filesize = read(file_fd, buffer, BUFSIZE)) > 0) {
+			ms_sleep(time_ms);
+			(void)write(fd,buffer,filesize);
+		}		
+	}
+	else 
+	{
+		while((filesize = read(file_fd, buffer, BUFSIZE)) > 0) {
+			(void)write(fd,buffer,filesize);
+		}
+	}
+	
 #ifdef LINUX
 	sleep(1);
 #endif
 	exit(1);
+	
 }
 
 
@@ -381,7 +417,7 @@ int main(int argc, char **argv)
 		else {
 			if(pid == 0) {
 				(void)close(listenfd);
-				web(socketfd,hit,configstruct.htdocs,configstruct.cgi);
+				web(socketfd,hit,configstruct.htdocs,configstruct.cgi,configstruct.maxspeed);
 			} else {
 				(void)close(socketfd);
 			}
