@@ -308,13 +308,14 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	(void)sprintf(buffer,"Content-Length: %d\r\n\r\n", contentfs);
 	(void)write(fd,buffer,strlen(buffer));
 	
-	int dothrottle;
+	int time_ms, bufchunk, limit, dothrottle;
 	
-	int time_ms, bufchunk, limit;
 	if(strncmp("0",throttle_speed,1)!=0) {
+		
 		limit = atoi(throttle_speed);
 		bufchunk = 4096;
 		time_ms = 1000/(limit/bufchunk);
+		
 		if(time_ms<1) {
 			dothrottle = 0;
 		} else {
