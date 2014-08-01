@@ -311,7 +311,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	int dothrottle;
 	
 	int time_ms, bufchunk, limit;
-	if(strncmp("0",cgistatus,1)!=0) {
+	if(strncmp("0",throttle_speed,1)!=0) {
 		limit = atoi(throttle_speed);
 		bufchunk = 4096;
 		time_ms = 1000/(limit/bufchunk);
