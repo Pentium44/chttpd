@@ -113,34 +113,39 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 {
 	int j, file_fd, buflen, len, contentfs;
 	long i, filesize;
-	char * fstr;
-	char * exten;
-	char * path; 
-	char * protocol;
-	char * stripslash_index;
-	char * stripslash_path;
+	char *fstr;
+	char *exten;
+	char *path; 
+	char *protocol;
+	char *stripslash_index;
+	char *stripslash_path;
 	size_t pathlen; 
 	static char buffer[BUFSIZE+1];
 	static char listbuffer[LIST_BUFSIZE*2];
 
 	// Check to see if file is corrupted
-	filesize =read(fd,buffer,BUFSIZE); 
+	filesize = read(fd,buffer,BUFSIZE); 
 	if(filesize == 0 || filesize == -1) {
 		do_chttpd_log(SORRY,"failed to read browser request","",fd);
 	}
 	
-	if(filesize > 0 && filesize < BUFSIZE)	
+	if(filesize > 0 && filesize < BUFSIZE) {
 		buffer[filesize]=0;	
-	else buffer[0]=0;
-
-	for(i=0;i<filesize;i++)	
-		if(buffer[i] == '\r' || buffer[i] == '\n')
+	} else {
+		buffer[0]=0;
+	}
+	
+	for(i=0;i<filesize;i++)	{
+		if(buffer[i] == '\r' || buffer[i] == '\n') {
 			buffer[i]='*';
+		}
+	}
 	do_chttpd_log(LOG,"request",buffer,hit);
 
-	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
+	if(strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4)) {
 		do_chttpd_log(SORRY,"Only simple GET operation supported",buffer,fd);
-
+	}
+	
 	for(i=4;i<BUFSIZE;i++) { 
 		if(buffer[i] == ' ') { 
 			buffer[i] = 0;
@@ -193,10 +198,11 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	// set uri path
 	path = strchr(buffer,' '); 
-		path++; 
+	path++; 
+	
 	// get protocol
 	protocol = strchr(path,' ');
-		protocol++;
+	protocol++;
 		
 	pathlen = strlen(path);
 	if(is_dir(path) == 1) {
@@ -279,9 +285,10 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	if(strncmp("serverlog",fstr,9)==0) do_chttpd_log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
-	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
+	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {
 		do_chttpd_log(SORRY, "failed to open file",&buffer[5],fd);
-
+	}
+	
 	if(strncmp("yes",cgistatus,3)==0) {
 		if(strncmp("servercgi",fstr,9)==0) {
 			do_cgi(file_fd,fd,datadir);
@@ -392,30 +399,36 @@ int main(int argc, char **argv)
 
 	do_chttpd_log(LOG,"CHTTPD server starting",configstruct.port,getpid());
 
-	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
+	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0) {
 		do_chttpd_log(ERROR, "system call","socket",0);
-	if(port < 0 || port > 60000)
+	}
+	
+	if(port < 0 || port > 60000) {
 		do_chttpd_log(ERROR,"Invalid port number try [1,60000], tried starting on ",configstruct.port,0);
+	}
 	
 	bzero(&serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
 	
-	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0)
+	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0) {
 		do_chttpd_log(ERROR,"Failed to ","bind",0);
-	if( listen(listenfd,64) <0)
+	}
+	
+	if( listen(listenfd,64) <0) {
 		do_chttpd_log(ERROR,"Failed to","listen",0);
-
+	}
+	
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
-		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, (socklen_t*) &length)) < 0)
+		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, (socklen_t*) &length)) < 0) {
 			do_chttpd_log(ERROR,"Failed to","accept",0);
-
+		}
+		
 		if((pid = fork()) < 0) {
 			do_chttpd_log(ERROR,"Failed to","fork",0);
-		}
-		else {
+		} else {
 			if(pid == 0) {
 				close(listenfd);
 				web(socketfd,hit,configstruct.htdocs,configstruct.cgi,configstruct.maxspeed);
