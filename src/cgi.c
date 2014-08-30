@@ -9,15 +9,20 @@
 #include "chttpd.h"
 #include "functions.h"
 
-void do_cgi(int file, char *fpath, int fd, char *cgiroot)
+void do_cgi(char fpath[], int fd, char *cgiroot)
 {
 	static char buffer[BUFSIZE+1];
 	char *cgidir;
-
-	char *dname = dirname(fpath);
+	char *cgi_p;
 	
+	cgi_p = malloc(strlen(cgiroot) + strlen(fpath) + 1);
+	strcpy(cgi_p, cgiroot);
+	strcat(cgi_p, fpath);
+	
+	char *cgipath = dirname(fpath);
+	cgidir = malloc(strlen(cgiroot) + strlen(fpath) + 1);
 	strcpy(cgidir, cgiroot);
-	strcat(cgidir, fpath+1);
+	strcat(cgidir, cgipath);
 	
 	// Write HTTP protocol to socket before executing cgi
 	sprintf(buffer,"HTTP/1.0 200 OK\r\n");
@@ -26,17 +31,10 @@ void do_cgi(int file, char *fpath, int fd, char *cgiroot)
 		start parsing the cgi code
 	*/
 	
-	/* test code */
-	
-	/*
-	sprintf(buffer,"Content-Type: text/plain\r\n\r\n%s, %s, %s", cgiroot, fpath, cgidir);
-	write(fd,buffer,strlen(buffer));
-	
-	free(dummy);
-	*/
 	
 	fd = dup2(fd,STDOUT_FILENO);
 	chdir(cgidir);
 	
-	execl("/bin/sh", file, NULL);
+	execl("/bin/sh", cgi_p, NULL);
+	
 }

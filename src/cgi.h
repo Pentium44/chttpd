@@ -1,1 +1,1 @@
-void do_cgi(int file, char *fpath, int fd, char *cgiroot);
+void do_cgi(char *fpath, int fd, char *cgiroot);

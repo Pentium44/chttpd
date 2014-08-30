@@ -293,8 +293,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	if(strncmp("yes",cgistatus,3)==0) {
 		if(strncmp("servercgi",fstr,9)==0) {
-			do_cgi(file_fd,&buffer[4],fd,datadir);
-			chdir(datadir);
+			do_cgi(&buffer[4],fd,datadir);
 			exit(0);
 		}
 	}
