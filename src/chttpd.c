@@ -3,8 +3,10 @@
 // Help from Nickolai Vurgaft (slipperygate@gmail.com)
 
 #include "chttpd.h"
+#include "functions.h"
 #include "mimetypes.h"
 #include "check.h"
+#include "cgi.h"
 #include "dep.h"
 #include "log.h"
 
@@ -291,7 +293,8 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	if(strncmp("yes",cgistatus,3)==0) {
 		if(strncmp("servercgi",fstr,9)==0) {
-			do_cgi(file_fd,fd,datadir);
+			do_cgi(file_fd,&buffer[4],fd,datadir);
+			chdir(datadir);
 			exit(0);
 		}
 	}

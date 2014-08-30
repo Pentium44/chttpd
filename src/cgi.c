@@ -7,22 +7,36 @@
 #include "dep.h"
 #include "cgi.h"
 #include "chttpd.h"
+#include "functions.h"
 
-void do_cgi(char *file, int fd, char *cgiroot)
+void do_cgi(int file, char *fpath, int fd, char *cgiroot)
 {
 	static char buffer[BUFSIZE+1];
+	char *cgidir;
+
+	char *dname = dirname(fpath);
+	
+	strcpy(cgidir, cgiroot);
+	strcat(cgidir, fpath+1);
 	
 	// Write HTTP protocol to socket before executing cgi
 	sprintf(buffer,"HTTP/1.0 200 OK\r\n");
 	write(fd,buffer,strlen(buffer));
-	// /
-	// start parsing the cgi code
-	// /
+	/*
+		start parsing the cgi code
+	*/
 	
-	// pipe stdout to socket
+	/* test code */
+	
+	/*
+	sprintf(buffer,"Content-Type: text/plain\r\n\r\n%s, %s, %s", cgiroot, fpath, cgidir);
+	write(fd,buffer,strlen(buffer));
+	
+	free(dummy);
+	*/
+	
 	fd = dup2(fd,STDOUT_FILENO);
-	// chroot cgi
-	chdir(cgiroot);
-	// execute cgi
+	chdir(cgidir);
+	
 	execl("/bin/sh", file, NULL);
 }

@@ -13,5 +13,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
-// For directory listings
-#include <dirent.h>
+#include <dirent.h> // For directory listings
+
+#include <libgen.h> // for dirname
