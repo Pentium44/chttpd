@@ -52,7 +52,7 @@ struct config get_config(char *filename)
 		// line buffer for config
 		char line[CONFBUF];
 		// int used to track config line
-		int i = 0;
+		//int i = 0;
      
 		// config while loop, loops fgets until end of file
 		while(fgets(line, sizeof(line), file) != NULL)
@@ -116,7 +116,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	int j, file_fd, buflen, len, contentfs;
 	long i, filesize;
 	char *fstr;
-	char *exten;
+	//char *exten;
 	char *path; 
 	char *protocol;
 	char *stripslash_index;
@@ -159,7 +159,7 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 		if(buffer[j] == '.' && buffer[j+1] == '.')
 			do_chttpd_log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
 	
-	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
+	if(!strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6)) { 
 		if(file_exists("index.html") == 0) {
 			strcpy(buffer,"GET /index.html");
 		} else {
@@ -197,7 +197,8 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 			exit(0);
 		}
 	
-	
+	}
+
 	// set uri path
 	path = strchr(buffer,' '); 
 	path++; 
@@ -271,18 +272,18 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	// Check file extensions and mime types before sending headers
 	buflen=strlen(buffer);
 	fstr = (char *)0;
-	exten = (char *)0;
+	//exten = (char *)0;
 	for(i=0;extensions[i].ext != 0;i++) {
 		len = strlen(extensions[i].ext);
 		if( !strncmp(&buffer[buflen-len], extensions[i].ext, len)) {
-			fstr =extensions[i].filetype;
-			exten =extensions[i].ext;
+			fstr = extensions[i].filetype;
+			//exten = extensions[i].ext;
 			break;
 		}
 	}
 	
 	if(fstr == 0) {
-		do_chttpd_log(SORRY, "Content error - ", "Unknown filetype.", fd);
+		fstr = "application/octet-stream";
 	}
 	
 	if(strncmp("serverlog",fstr,9)==0) do_chttpd_log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);

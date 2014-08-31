@@ -1,21 +1,25 @@
 # Makefile - (C) Chris Dorman, 2013 <cddo@riseup.net>
 
-CC=gcc
-FLAGS=
+PREFIX = /usr/local
+CC = gcc
 
-all: chttpd
+CFLAGS = -O2 -Wall -Wextra
+LDFLAGS = 
 
-chttpd: chttpd.o
-		$(CC) chttpd.o check.o cgi.o log.o functions.o -o chttpd
-chttpd.o: 
-		$(CC) -c src/chttpd.c $(FLAGS)
-		$(CC) -c src/check.c $(FLAGS)
-		$(CC) -c src/cgi.c $(FLAGS)
-		$(CC) -c src/log.c $(FLAGS)
-		$(CC) -c src/functions.c $(FLAGS)
+BIN = chttpd
+CONFIGFILE = inc/chttpd.conf
+OBJECTS = src/chttpd.o src/functions.o src/cgi.o src/check.o src/log.o
+
+all: main
+
+fresh: clean all
+
+main: $(OBJECTS)
+	$(CC) $(OBJECTS) -o $(BIN) $(LDFLAGS) $(CFLAGS)
+	
 clean:
-		rm *o chttpd
-		
-install: 
-		cp chttpd /usr/sbin
-		cp inc/chttpd.conf /etc
+	rm -f $(OBJECTS) $(BIN)
+	
+install:
+	cp $(BIN) $(PREFIX)/bin/$(BIN)
+	cp $(CONFIGFILE) /etc/chttpd.conf
