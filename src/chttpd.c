@@ -11,7 +11,7 @@
 #include "log.h"
 
 const char *client = "chttpd";
-const char *version = "1.3.1";
+const char *version = "1.3.1b";
 const char *sys_lable = "Linux";
 
 int forward_slash = 47; // forward slash in ascii
@@ -28,39 +28,6 @@ struct config
 	char cgi[CONFBUF];
 	char maxspeed[CONFBUF];
 };
-     
-
-// Addition by OldCoder for replacing HEX values in URI.
-// START OF OLDCODER :P
-int hexchartonum (char c)
-{
-    if ((c >= '0') && (c <= '9')) return c - '0';
-    if ((c >= 'a') && (c <= 'f')) return c - 'a' + 10;
-    if ((c >= 'A') && (c <= 'F')) return c - 'A' + 10;
-    return -1;
-}
-
-char *fixpath (char *input)
-{
-    static char xbuf [1024];
-    char *cp;
-    strcpy (xbuf, input);
-
-    while ((cp = strchr (xbuf, '%')) != NULL)
-    {
-        int h1 = hexchartonum (cp [1]);
-        if (h1 < 0) return "";
-        int h2 = hexchartonum (cp [2]);
-        if (h2 < 0) return "";
-        int hh = (h1 * 16) + h2;
-        *cp = hh;
-        strcpy (cp+1, cp+3);
-    }
-
-    return xbuf;
-}
-
-// END OF OLDCODER :P
 
 // write to struct
 struct config get_config(char *filename)
