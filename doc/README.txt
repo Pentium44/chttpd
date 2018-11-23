@@ -13,6 +13,9 @@ Compiling chttpd:
 	~start the httpd
 
 Changelog:
+	v1.3.1:
+	Fixed a major URI path bug.
+
 	v1.3.0:
 	Added CGI support.
 	CGI can be enabled / disabled within config

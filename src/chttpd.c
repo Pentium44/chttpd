@@ -11,7 +11,7 @@
 #include "log.h"
 
 const char *client = "chttpd";
-const char *version = "1.3.0";
+const char *version = "1.3.1";
 const char *sys_lable = "Linux";
 
 int forward_slash = 47; // forward slash in ascii
@@ -29,6 +29,39 @@ struct config
 	char maxspeed[CONFBUF];
 };
      
+
+// Addition by OldCoder for replacing HEX values in URI.
+// START OF OLDCODER :P
+int hexchartonum (char c)
+{
+    if ((c >= '0') && (c <= '9')) return c - '0';
+    if ((c >= 'a') && (c <= 'f')) return c - 'a' + 10;
+    if ((c >= 'A') && (c <= 'F')) return c - 'A' + 10;
+    return -1;
+}
+
+char *fixpath (char *input)
+{
+    static char xbuf [1024];
+    char *cp;
+    strcpy (xbuf, input);
+
+    while ((cp = strchr (xbuf, '%')) != NULL)
+    {
+        int h1 = hexchartonum (cp [1]);
+        if (h1 < 0) return "";
+        int h2 = hexchartonum (cp [2]);
+        if (h2 < 0) return "";
+        int hh = (h1 * 16) + h2;
+        *cp = hh;
+        strcpy (cp+1, cp+3);
+    }
+
+    return xbuf;
+}
+
+// END OF OLDCODER :P
+
 // write to struct
 struct config get_config(char *filename)
 {
@@ -200,8 +233,8 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	}
 
 	// set uri path
-	path = strchr(buffer,' '); 
-	path++; 
+	path = fixpath(strchr(buffer,' '));
+	path++;
 	
 	// get protocol
 	protocol = strchr(path,' ');
@@ -288,13 +321,13 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	
 	if(strncmp("serverlog",fstr,9)==0) do_chttpd_log(SORRY,"Cannot retrieve server logs, forbidden!",buffer,fd);
 
-	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) {
-		do_chttpd_log(SORRY, "failed to open file",&buffer[5],fd);
+	if(( file_fd = open(&path[1],O_RDONLY)) == -1) {
+		do_chttpd_log(SORRY, "failed to open file",&path[1],fd);
 	}
 	
 	if(strncmp("yes",cgistatus,3)==0) {
 		if(strncmp("servercgi",fstr,9)==0) {
-			do_cgi(&buffer[4],fd,datadir);
+			do_cgi(path,fd,datadir);
 			exit(0);
 		}
 	}
@@ -306,10 +339,10 @@ void web(int fd, int hit, char *datadir, char *cgistatus, char *throttle_speed)
 	}
 	
 	struct stat filesz;
-	stat(&buffer[5], &filesz);
+	stat(&path[1], &filesz);
 	contentfs = filesz.st_size;
 
-	do_chttpd_log(LOG,"SEND",&buffer[5],hit);
+	do_chttpd_log(LOG,"SEND",&path[1],hit);
 
 	sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n", fstr);
 	write(fd,buffer,strlen(buffer));
