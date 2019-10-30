@@ -23,3 +23,4 @@ clean:
 install:
 	cp $(BIN) $(PREFIX)/bin/$(BIN)
 	cp $(CONFIGFILE) /etc/chttpd.conf
+	cp inc/$(BIN) /etc/init.d/$(BIN)
