@@ -35,6 +35,6 @@ void do_cgi(char fpath[], int fd, char *cgiroot)
 	fd = dup2(fd,STDOUT_FILENO);
 	chdir(cgidir);
 	
-	execl("/bin/sh", cgi_p, NULL);
+	execl("/bin/bash", cgi_p, NULL);
 	
 }
